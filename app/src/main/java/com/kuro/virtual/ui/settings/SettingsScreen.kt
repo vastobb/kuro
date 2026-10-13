@@ -55,7 +55,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
         Text("Settings", style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.height(8.dp))
         SettingRow("App", "Kuro ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
-        SettingRow("Android", "API ${Build.VERSION.SDK_INT} (${Build.RELEASE})")
+        SettingRow("Android", "API ${Build.VERSION.SDK_INT} (${Build.VERSION.RELEASE})")
         SettingRow(
             "Device",
             if (VirtualCore.is64BitDevice) "64-bit" else "32-bit",
