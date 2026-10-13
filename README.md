@@ -70,11 +70,12 @@ illustration + headline + description + action. Taps scale 0.97 + haptic.
 
 ## Release build (signed)
 
-`release.yml` runs `assembleRelease`, signs with repository secrets, verifies
-with `apksigner` + `aapt2`, and uploads **`kuro-release.apk`**.
+`release.yml` runs `assembleRelease`, signs with the repository keystore
+(`ANDROID_KEYSTORE_*` secrets, already configured), verifies with `apksigner`
++ `aapt2`, and uploads **`kuro-release.apk`** (`dev.kuro.app`, v1).
 Emulator testing (`launch-audit.yml`) also uses the signed release APK.
 
-Create the secrets once (keystore stays on your machine):
+To rotate the key later:
 
 ```bash
 keytool -genkeypair -keystore kuro-release.jks -alias kuro \
