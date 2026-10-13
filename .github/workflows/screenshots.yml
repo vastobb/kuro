@@ -33,6 +33,12 @@ jobs:
       - name: Record screenshots
         run: ./gradlew :app:recordPaparazziDebug --stacktrace
 
+      - name: Dump test XML on failure
+        if: failure()
+        run: |
+          ls app/build/test-results/testDebugUnitTest/ || true
+          grep -A 30 "ExceptionInInitializerError" app/build/test-results/testDebugUnitTest/*.xml | head -n 60 || true
+
       - name: List screenshots
         run: find app/src/test/snapshots -type f | sort
 
