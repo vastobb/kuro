@@ -16,6 +16,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -100,6 +101,11 @@ private fun RowScope.KuroTab(
         selected = selected,
         onClick = onClick,
         icon = { Icon(icon, contentDescription = label) },
-        label = { Text(label, style = MaterialTheme.typography.labelMedium) }
+        label = { Text(label, style = MaterialTheme.typography.labelMedium) },
+        colors = NavigationBarItemDefaults.colors(
+            selectedIconColor = MaterialTheme.colorScheme.primary,
+            selectedTextColor = MaterialTheme.colorScheme.primary,
+            indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
+        )
     )
 }

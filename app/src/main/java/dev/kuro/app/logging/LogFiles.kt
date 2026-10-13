@@ -20,14 +20,14 @@ object LogFiles {
     fun isLogFile(f: File): Boolean =
         f.isFile && (f.name.startsWith("kuro_") || f.name.startsWith("crash_")) && f.name.endsWith(".log")
 
-    fun listAll(context: Context): List<File> {
+    fun listAll(context: Context): List<File> = runCatching {
         val dirs = linkedSetOf<File>()
         runCatching { context.getExternalFilesDir(null)?.let { dirs += File(it, "logs") } }
         dirs += File(context.filesDir, "logs")
-        return dirs.flatMap { d -> d.listFiles()?.toList().orEmpty() }
+        dirs.flatMap { d -> d.listFiles()?.toList().orEmpty() }
             .filter(::isLogFile)
             .sortedByDescending { it.lastModified() }
-    }
+    }.getOrDefault(emptyList())
 
     fun readCapped(file: File, maxChars: Int = MAX_VIEW_CHARS): String = runCatching {
         file.inputStream().bufferedReader().use { r ->

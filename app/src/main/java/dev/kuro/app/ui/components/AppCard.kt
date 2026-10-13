@@ -1,6 +1,7 @@
 package dev.kuro.app.ui.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
@@ -38,9 +40,8 @@ import dev.kuro.app.ui.theme.KuroCardShape
 import dev.kuro.app.ui.theme.KuroSpacing
 
 /**
- * Modern app card — not a simple icon.
- * Icon + name + env badge + version badge + status + launch button.
- * Long-press reveals Launch / Clone / Export / Settings / Delete via sheet.
+ * Flagship app card — duotone icon tile, name + package, badge row,
+ * status line, circular launch button. Long-press opens the action sheet.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -52,6 +53,7 @@ fun AppCard(
     modifier: Modifier = Modifier
 ) {
     val haptics = LocalHapticFeedback.current
+    val tint = Color(app.iconTint)
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -65,6 +67,10 @@ fun AppCard(
                 }
             ),
         shape = KuroCardShape,
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outline.copy(alpha = 0.55f)
+        ),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
     ) {
         Row(
@@ -73,24 +79,17 @@ fun AppCard(
         ) {
             Box(
                 Modifier
-                    .size(52.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .padding(0.dp),
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(tint.copy(alpha = 0.16f)),
                 contentAlignment = Alignment.Center
             ) {
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(app.iconTint).copy(alpha = 0.18f))
-                ) {
-                    Box(Modifier.size(52.dp), contentAlignment = Alignment.Center) {
-                        Icon(
-                            Icons.Filled.Apps,
-                            contentDescription = null,
-                            tint = Color(app.iconTint),
-                            modifier = Modifier.size(26.dp)
-                        )
-                    }
-                }
+                Icon(
+                    Icons.Filled.Apps,
+                    contentDescription = null,
+                    tint = tint,
+                    modifier = Modifier.size(28.dp)
+                )
             }
             Spacer(Modifier.width(KuroSpacing.s12))
             Column(Modifier.weight(1f)) {
@@ -100,7 +99,14 @@ fun AppCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Spacer(Modifier.height(4.dp))
+                Text(
+                    app.packageName,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.height(6.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     EnvironmentBadge(app.environment)
                     VersionBadge("v${app.version}")
@@ -109,11 +115,23 @@ fun AppCard(
                 StatusIndicator(app.status, pulsing = true)
             }
             Spacer(Modifier.width(KuroSpacing.s8))
-            IconButton(onClick = {
-                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                onLaunch()
-            }) {
-                Icon(Icons.Filled.PlayArrow, contentDescription = "Launch ${app.name}")
+            IconButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onLaunch()
+                },
+                modifier = Modifier
+                    .size(44.dp)
+                    .background(
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
+                        CircleShape
+                    )
+            ) {
+                Icon(
+                    Icons.Filled.PlayArrow,
+                    contentDescription = "Launch ${app.name}",
+                    tint = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }

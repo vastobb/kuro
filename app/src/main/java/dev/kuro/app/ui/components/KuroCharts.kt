@@ -42,14 +42,14 @@ fun KuroMeter(
             Text(
                 valueLabel,
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.primary
             )
         }
         Spacer(Modifier.height(6.dp))
         Box(
             Modifier
                 .fillMaxWidth()
-                .height(8.dp)
+                .height(10.dp)
                 .clip(RoundedCornerShape(12.dp))
                 .background(MaterialTheme.colorScheme.surfaceContainerHighest)
         ) {

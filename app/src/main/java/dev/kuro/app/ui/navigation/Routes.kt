@@ -2,7 +2,6 @@ package dev.kuro.app.ui.navigation
 
 /** Single-source destinations for Navigation Compose. */
 object Routes {
-    const val SPLASH = "splash"
     const val HOME = "home"
     const val VAULT = "vault"
     const val IMPORT = "import"

@@ -95,7 +95,7 @@ fun DebugLogsScreen(onBack: () -> Unit) {
                 IconButton(onClick = onBack) {
                     Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
                 }
-                KuroScreenTitle("Debug Logs", "${files.size} files")
+                KuroScreenTitle("Debug Logs", "${files.size} files", eyebrow = "Diagnostics")
                 Spacer(Modifier.weight(1f))
                 IconButton(onClick = { refresh() }) {
                     Icon(Icons.Filled.Refresh, contentDescription = "Refresh")

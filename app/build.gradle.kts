@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.paparazzi)
 }
 
 // Release signing comes from repository secrets via env (see release.yml).
@@ -82,8 +83,6 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.coil.compose)
-    implementation(libs.lottie.compose)
 
     testImplementation("junit:junit:4.13.2")
 }

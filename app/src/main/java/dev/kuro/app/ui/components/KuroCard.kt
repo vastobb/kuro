@@ -1,5 +1,6 @@
 package dev.kuro.app.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
@@ -8,11 +9,19 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import dev.kuro.app.ui.theme.KuroCardShape
 import dev.kuro.app.ui.theme.KuroHeroShape
 import dev.kuro.app.ui.theme.KuroSpacing
 
-/** Standard 20dp card. */
+/** Hairline border shared by every Kuro surface — the anti-generic detail. */
+@Composable
+private fun kuroBorder() = BorderStroke(
+    1.dp,
+    MaterialTheme.colorScheme.outline.copy(alpha = 0.55f)
+)
+
+/** Standard 20dp card: tonal surface + hairline border. */
 @Composable
 fun KuroCard(
     modifier: Modifier = Modifier,
@@ -23,6 +32,7 @@ fun KuroCard(
         Card(
             modifier = modifier,
             shape = KuroCardShape,
+            border = kuroBorder(),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
             onClick = onClick,
             content = { Column(Modifier.padding(KuroSpacing.s16), content = content) }
@@ -31,6 +41,7 @@ fun KuroCard(
         Card(
             modifier = modifier,
             shape = KuroCardShape,
+            border = kuroBorder(),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
             content = { Column(Modifier.padding(KuroSpacing.s16), content = content) }
         )
@@ -46,6 +57,7 @@ fun KuroHeroCard(
     Card(
         modifier = modifier,
         shape = KuroHeroShape,
+        border = kuroBorder(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
         content = { Column(Modifier.padding(KuroSpacing.s20), content = content) }
     )

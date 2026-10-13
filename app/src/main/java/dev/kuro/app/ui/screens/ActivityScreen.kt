@@ -50,7 +50,7 @@ fun ActivityScreen() {
         verticalArrangement = Arrangement.spacedBy(KuroSpacing.s12)
     ) {
         item {
-            KuroScreenTitle("Activity", "${PreviewData.running.size} live environments")
+            KuroScreenTitle("Activity", "${PreviewData.running.size} live environments", eyebrow = "Monitor")
         }
         item {
             KuroCard(Modifier.padding(horizontal = KuroSpacing.s20).fillMaxWidth()) {

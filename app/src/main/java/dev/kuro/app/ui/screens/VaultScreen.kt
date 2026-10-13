@@ -59,7 +59,7 @@ fun VaultScreen(
         verticalArrangement = Arrangement.spacedBy(KuroSpacing.s12)
     ) {
         item {
-            KuroScreenTitle("Vault", "${PreviewData.apps.size} virtual apps · isolated")
+            KuroScreenTitle("Vault", "${PreviewData.apps.size} virtual apps · isolated", eyebrow = "Library")
         }
         item {
             Column(Modifier.padding(horizontal = KuroSpacing.s20)) {
@@ -113,7 +113,7 @@ fun VaultScreen(
                     onLaunch = {},
                     onOpen = { onOpenApp(app.id) },
                     onLongPress = { sheetAppId = app.id },
-                    modifier = Modifier.padding(horizontal = KuroSpacing.s20)
+                    modifier = Modifier.padding(horizontal = KuroSpacing.s20).animateItem()
                 )
             }
         }

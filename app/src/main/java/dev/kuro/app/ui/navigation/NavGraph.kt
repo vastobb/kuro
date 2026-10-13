@@ -8,7 +8,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
@@ -26,12 +25,10 @@ import dev.kuro.app.ui.screens.HomeScreen
 import dev.kuro.app.ui.screens.ImportFlowScreen
 import dev.kuro.app.ui.screens.ImportScreen
 import dev.kuro.app.ui.screens.SettingsScreen
-import dev.kuro.app.ui.screens.SplashScreen
 import dev.kuro.app.ui.theme.KuroTheme
 
 /** Short display name for navigation tracing. */
 private fun traceName(route: String): String = when {
-    route == Routes.SPLASH -> "Splash"
     route == Routes.HOME -> "Home"
     route == Routes.VAULT -> "Vault"
     route == Routes.IMPORT -> "Import"
@@ -44,8 +41,9 @@ private fun traceName(route: String): String = when {
 }
 
 /**
- * Kuro nav — Navigation Compose + bottom bar (Home / Vault / Import* / Activity / Settings).
- * *Import is center-elevated.
+ * Kuro nav — startup-safety policy: start destination is Home, no splash,
+ * no launch-time navigation. Bottom bar: Home / Vault / Import* / Activity /
+ * Settings (*Import is center-elevated).
  */
 @Composable
 fun KuroNavGraph() {
@@ -59,7 +57,6 @@ fun KuroNavGraph() {
 
     KuroTheme(darkTheme = darkTheme) {
         val showBar = route != null &&
-            route != Routes.SPLASH &&
             route != Routes.DEBUG_LOGS &&
             !route.startsWith("import_flow") &&
             !route.startsWith("app_detail")
@@ -80,26 +77,9 @@ fun KuroNavGraph() {
         ) { padding ->
             NavHost(
                 navController = nav,
-                startDestination = Routes.SPLASH,
+                startDestination = Routes.HOME,
                 modifier = Modifier.padding(padding)
             ) {
-                composable(Routes.SPLASH) {
-                    // Single-fire guard: if this effect re-fires when SPLASH is
-                    // no longer on the back stack (back press during the 1.15s
-                    // window, config change, state restoration), navigate() with
-                    // popUpTo(SPLASH) throws IllegalArgumentException and kills
-                    // launch. Normal path behaves exactly as before.
-                    var handled by rememberSaveable { mutableStateOf(false) }
-                    SplashScreen(onDone = {
-                        if (!handled) {
-                            handled = true
-                            KuroLog.splashEnd()
-                            runCatching {
-                                nav.navigate(Routes.HOME) { popUpTo(Routes.SPLASH) { inclusive = true } }
-                            }
-                        }
-                    })
-                }
                 composable(Routes.HOME) {
                     HomeScreen(
                         onOpenApp = { nav.navigate(Routes.appDetail(it)) },

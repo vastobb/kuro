@@ -1,0 +1,59 @@
+name: Debug launch proof (emulator)
+
+# One-shot verification that the debug APK boots to Home with no FATAL.
+# Manual only — release testing stays in launch-audit.yml.
+on:
+  workflow_dispatch:
+
+jobs:
+  proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Install Android platform + build-tools
+        run: |
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          export ANDROID_SDK_ROOT=/usr/local/lib/android/sdk
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+          sdkmanager --install "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+          yes | sdkmanager --licenses || true
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Build debug APK
+        run: ./gradlew :app:assembleDebug --stacktrace
+
+      - name: Boot check on emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          script: |
+            adb install -r app/build/outputs/apk/debug/app-debug.apk
+            adb logcat -c
+            adb shell am start -n dev.kuro.app.debug/dev.kuro.app.MainActivity
+            sleep 20
+            adb shell pidof dev.kuro.app.debug && echo "PROCESS ALIVE" || echo "PROCESS GONE"
+            adb logcat -d -v brief > logcat.txt || true
+            echo "=== AndroidRuntime / FATAL ==="
+            grep -B 2 -A 40 "FATAL EXCEPTION" logcat.txt | head -n 120 || echo "no FATAL EXCEPTION"
+
+      - name: Upload logcat
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-launch-logcat
+          path: logcat.txt
+          if-no-files-found: warn

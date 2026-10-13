@@ -1,3 +1,2 @@
-# Kuro ProGuard rules — UI foundation (no obfuscation yet).
+# Kuro ProGuard rules — UI milestone (no obfuscation yet).
 -keep class dev.kuro.app.** { *; }
--dontwarn com.airbnb.lottie.**

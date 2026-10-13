@@ -91,7 +91,7 @@ fun SettingsScreen(
         contentPadding = PaddingValues(top = KuroSpacing.s20, bottom = KuroSpacing.s32),
         verticalArrangement = Arrangement.spacedBy(KuroSpacing.s16)
     ) {
-        item { KuroScreenTitle("Settings", "Tuned for calm and speed") }
+        item { KuroScreenTitle("Settings", "Tuned for calm and speed", eyebrow = "Preferences") }
         groups.forEach { (title, rows) ->
             item {
                 Column(Modifier.padding(horizontal = KuroSpacing.s20)) {
@@ -120,7 +120,11 @@ fun SettingsScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.padding(vertical = KuroSpacing.s8)
                             ) {
-                                Icon(row.icon, contentDescription = null)
+                                Icon(
+                                    row.icon,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
                                 Column(Modifier.weight(1f).padding(start = KuroSpacing.s12)) {
                                     Text(row.title, style = MaterialTheme.typography.titleMedium)
                                     Text(
