@@ -19,6 +19,10 @@ Public repo: https://github.com/vastobb/kuro
   app and away from the main task stack.
 - Per-app vault data dir with one-tap clear; crash in a launched app cannot
   take down Kuro (separate processes, result-checked launches).
+- Real clones via managed work profile: separate OS-level instances with
+  separate data, launched cross-profile from Kuro. Plain entries open the
+  device copy; long-press an entry and choose Clone once the profile is set
+  up in Settings.
 - Clean original design: white + black + vermilion red, Material 3, dark mode
   follows the system, springy grid, animated navigation, monogram avatars.
   Deliberately not a BlackBox look-alike and no AI-gradient styling.
@@ -51,6 +55,25 @@ Phase 1 runs managed shortcuts and managed APK installs with isolated task
 stacks. Install-free execution (full AMS/PMS Binder virtualization + native
 I/O hooks) is an explicit Phase 2 roadmap item in `IsolationPolicy`; the
 interfaces are ready but not claimed as done.
+
+## Clones vs device copies
+
+Tapping a plain vault entry opens the device copy of that app (same instance,
+same data) — Android gives a normal app no other way to run an installed
+package. For a true separate instance, Kuro clones into a managed work
+profile (same approach as Island/Shelter, public APIs only, no root):
+
+1. Open Settings → Work profile clones → Set up. The system creates the
+   profile with Kuro as its manager (one-time, user-confirmed).
+2. Long-press a vault entry → Clone to work profile. Kuro stages its APKs
+   and hands them to the profile-side installer; confirm once in the work
+   context.
+3. The entry shows a Clone badge and opens the separate instance from then on.
+
+APK entries whose package is not installed get an Install action instead:
+Kuro installs the vault APK through a user-confirmed system session, then
+launches it. Some OEMs restrict work-profile provisioning; Settings reports
+when setup is unavailable.
 
 ## Requirements
 

@@ -30,6 +30,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,10 +44,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.kuro.core.ProfileManager
 import com.kuro.virtual.data.VaultEntry
 import com.kuro.virtual.data.VaultRepository
 import com.kuro.virtual.data.VaultStore
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -102,7 +106,7 @@ fun HomeScreen(
                 Text("Vault is empty", style = MaterialTheme.typography.headlineSmall)
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "Add an installed app or import an APK file to run it here in isolation.",
+                    "Add an installed app or import an APK file, then clone it into the work profile for a separate instance.",
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -123,7 +127,7 @@ fun HomeScreen(
                         entry = entry,
                         onLaunch = {
                             scope.launch {
-                                val res = repo.launch(entry.packageName)
+                                val res = repo.launch(entry)
                                 if (!res.ok) {
                                     snackbar.showSnackbar(res.reason ?: "Launch failed")
                                 }
@@ -137,16 +141,52 @@ fun HomeScreen(
     }
 
     menuEntry?.let { entry ->
+        var installedNow by remember(entry) { mutableStateOf<Boolean?>(null) }
+        var profileReady by remember(entry) { mutableStateOf(false) }
+
+        LaunchedEffect(entry) {
+            val outcome = withContext(Dispatchers.IO) {
+                Triple(
+                    repo.isInstalled(entry.packageName),
+                    ProfileManager.workProfile(context) != null,
+                    repo.refreshCloneState(entry),
+                )
+            }
+            installedNow = outcome.first
+            profileReady = outcome.second
+            if (outcome.third != entry) {
+                VaultStore.save(
+                    context,
+                    VaultStore.load(context).map {
+                        if (it.packageName == entry.packageName) outcome.third else it
+                    },
+                )
+                menuEntry = outcome.third
+                reload()
+            }
+        }
+
+        val installed = installedNow
         AlertDialog(
             onDismissRequest = { menuEntry = null },
             title = { Text(entry.label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-            text = { Text(entry.packageName) },
+            text = {
+                Text(
+                    (if (entry.inProfile) "Work-profile clone." else "Device copy.") +
+                        " " + entry.packageName +
+                        if (installed == true && !entry.inProfile && !profileReady) {
+                            "\n\nRuns the original app. Set up a work profile in Settings to clone it."
+                        } else {
+                            ""
+                        },
+                )
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
                         menuEntry = null
                         scope.launch {
-                            val res = repo.launch(entry.packageName)
+                            val res = repo.launch(entry)
                             if (!res.ok) snackbar.showSnackbar(res.reason ?: "Launch failed")
                         }
                     },
@@ -154,6 +194,40 @@ fun HomeScreen(
             },
             dismissButton = {
                 Column(horizontalAlignment = Alignment.End) {
+                    if (entry.fromApkFile && installed == false) {
+                        TextButton(
+                            onClick = {
+                                menuEntry = null
+                                scope.launch {
+                                    snackbar.showSnackbar("Installing ${entry.label}…")
+                                    val res = repo.installVaultApk(entry)
+                                    snackbar.showSnackbar(
+                                        res.fold(
+                                            { "Installed. Tap to launch." },
+                                            { "Install failed: ${it.message}" },
+                                        ),
+                                    )
+                                }
+                            },
+                        ) { Text("Install") }
+                    }
+                    if (installed == true && profileReady && !entry.inProfile) {
+                        TextButton(
+                            onClick = {
+                                menuEntry = null
+                                scope.launch {
+                                    snackbar.showSnackbar("Cloning ${entry.label}…")
+                                    val res = repo.cloneToProfile(entry)
+                                    snackbar.showSnackbar(
+                                        res.fold(
+                                            { it },
+                                            { "Clone failed: ${it.message}" },
+                                        ),
+                                    )
+                                }
+                            },
+                        ) { Text("Clone to work profile") }
+                    }
                     TextButton(
                         onClick = {
                             menuEntry = null
@@ -219,7 +293,7 @@ private fun VaultCard(
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                if (entry.fromApkFile) "APK" else "Installed",
+                if (entry.inProfile) "Clone" else if (entry.fromApkFile) "APK" else "Installed",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.secondary,
             )

@@ -1,8 +1,12 @@
 package com.kuro.virtual.ui.settings
 
+import android.content.ComponentName
 import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -18,23 +22,39 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.kuro.core.ProfileManager
 import com.kuro.core.VirtualCore
 import com.kuro.core.VirtualStorage
 import com.kuro.virtual.BuildConfig
+import com.kuro.virtual.KuroDeviceAdmin
 import com.kuro.virtual.data.VaultStore
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Locale
 
 @Composable
 fun SettingsScreen(modifier: Modifier = Modifier) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var vaultBytes by remember { mutableStateOf(-1L) }
     var confirmClear by remember { mutableStateOf(false) }
+    var confirmRemoveProfile by remember { mutableStateOf(false) }
+    var profileState by remember { mutableStateOf("…") }
+    var profileNote by remember { mutableStateOf<String?>(null) }
+
+    fun refreshProfile() {
+        profileState = when {
+            ProfileManager.isProfileOwner(context) -> "Active — Kuro manages the work profile"
+            ProfileManager.workProfile(context) != null -> "Present (managed by another app)"
+            else -> "Not set up"
+        }
+    }
 
     LaunchedEffect(Unit) {
         vaultBytes = withContext(Dispatchers.IO) {
@@ -44,6 +64,14 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
                 -1L
             }
         }
+        refreshProfile()
+    }
+
+    val provisionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+    ) {
+        refreshProfile()
+        profileNote = "Returned from setup. If the profile is active, clone apps from their menus."
     }
 
     Column(
@@ -63,15 +91,49 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
         SettingRow("ABIs", VirtualCore.deviceAbis().joinToString(", "))
         SettingRow("Vault size", formatBytes(vaultBytes))
         SettingRow("Theme", "Follows system (white / black + vermilion)")
-        Spacer(Modifier.height(16.dp))
+
+        Spacer(Modifier.height(12.dp))
+        Text("Work profile clones", style = MaterialTheme.typography.titleSmall)
+        SettingRow("Status", profileState)
+        profileNote?.let {
+            Text(it, style = MaterialTheme.typography.bodySmall)
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(
+                onClick = {
+                    val intent = ProfileManager.provisioningIntent(context, KuroDeviceAdmin.component(context))
+                    if (intent == null) {
+                        profileNote = "Work-profile setup is not available on this device."
+                    } else {
+                        try {
+                            provisionLauncher.launch(intent)
+                        } catch (_: Exception) {
+                            profileNote = "Could not start setup on this device."
+                        }
+                    }
+                },
+                enabled = profileState == "Not set up",
+            ) { Text("Set up") }
+            TextButton(
+                onClick = { confirmRemoveProfile = true },
+                enabled = profileState.startsWith("Active"),
+            ) { Text("Remove") }
+        }
+        Text(
+            "Clones are separate OS-level instances with separate data. Tapping a plain entry " +
+                "still opens the device copy; long-press it and choose Clone once the profile is active.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        Spacer(Modifier.height(12.dp))
         Button(
             onClick = { confirmClear = true },
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
         ) { Text("Clear vault") }
         Spacer(Modifier.height(8.dp))
         Text(
-            "Phase 1: managed vault with isolated task stacks and per-app storage. " +
-                "Install-free engine execution is on the roadmap, not claimed yet.",
+            "Install-free engine execution stays on the roadmap; nothing here claims it yet.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -98,6 +160,34 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
             },
             dismissButton = {
                 TextButton(onClick = { confirmClear = false }) { Text("Cancel") }
+            },
+        )
+    }
+
+    if (confirmRemoveProfile) {
+        AlertDialog(
+            onDismissRequest = { confirmRemoveProfile = false },
+            title = { Text("Remove work profile?") },
+            text = { Text("Kuro stops managing the profile. Clones inside it are removed with it.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        confirmRemoveProfile = false
+                        scope.launch(Dispatchers.IO) {
+                            val ok = ProfileManager.clearProfileOwner(
+                                context,
+                                KuroDeviceAdmin.component(context),
+                            )
+                            withContext(Dispatchers.Main) {
+                                profileNote = if (ok) "Profile ownership removed." else "Could not remove it."
+                                refreshProfile()
+                            }
+                        }
+                    },
+                ) { Text("Remove") }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmRemoveProfile = false }) { Text("Cancel") }
             },
         )
     }
