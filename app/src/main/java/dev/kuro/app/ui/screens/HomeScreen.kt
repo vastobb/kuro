@@ -105,7 +105,7 @@ fun HomeScreen(
                 }
             }
         }
-        item { SectionHeader("Recent Apps", "See all") { onSeeAll() } }
+        item { SectionHeader("Recent Apps", "See all", onAction = { onSeeAll() }) }
         items(apps.take(3), key = { it.id }) { app ->
             AppCard(
                 app = app,

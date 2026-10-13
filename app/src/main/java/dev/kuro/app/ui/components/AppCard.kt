@@ -1,5 +1,6 @@
 package dev.kuro.app.ui.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -41,6 +42,7 @@ import dev.kuro.app.ui.theme.KuroSpacing
  * Icon + name + env badge + version badge + status + launch button.
  * Long-press reveals Launch / Clone / Export / Settings / Delete via sheet.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AppCard(
     app: VirtualApp,
