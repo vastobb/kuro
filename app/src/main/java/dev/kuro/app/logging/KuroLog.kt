@@ -146,10 +146,13 @@ object KuroLog {
             recent.addLast(l)
             l
         }
-        when (level) {
-            "W" -> ALog.w(TAG, msg)
-            "E" -> ALog.e(TAG, msg)
-            else -> ALog.i(TAG, msg)
+        // Best-effort mirror: android.jar stubs throw on JVM unit tests.
+        runCatching {
+            when (level) {
+                "W" -> ALog.w(TAG, msg)
+                "E" -> ALog.e(TAG, msg)
+                else -> ALog.i(TAG, msg)
+            }
         }
         io.execute {
             runCatching {
