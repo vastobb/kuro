@@ -61,6 +61,12 @@ private val KuroLightScheme = lightColorScheme(
 /**
  * Kuro theme — dark-first AMOLED, separate light design, dynamic-color aware.
  * AMOLED: pure #0B0D13 background in dark mode.
+ *
+ * Launch-safe: dynamic palettes are read from OEM monet resources, which are
+ * absent on some custom ROMs / skins (Resources.NotFoundException -> instant
+ * black-screen crash before first frame). Fall back to the designed Kuro
+ * schemes so launch can never die here. Healthy devices take the identical
+ * branch as before.
  */
 @Composable
 fun KuroTheme(
@@ -71,7 +77,9 @@ fun KuroTheme(
     val context = LocalContext.current
     val scheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            runCatching {
+                if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            }.getOrElse { if (darkTheme) KuroDarkScheme else KuroLightScheme }
         }
         darkTheme -> KuroDarkScheme
         else -> KuroLightScheme

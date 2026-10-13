@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
@@ -62,8 +63,19 @@ fun KuroNavGraph() {
                 modifier = Modifier.padding(padding)
             ) {
                 composable(Routes.SPLASH) {
+                    // Single-fire guard: if this effect re-fires when SPLASH is
+                    // no longer on the back stack (back press during the 1.15s
+                    // window, config change, state restoration), navigate() with
+                    // popUpTo(SPLASH) throws IllegalArgumentException and kills
+                    // launch. Normal path behaves exactly as before.
+                    var handled by rememberSaveable { mutableStateOf(false) }
                     SplashScreen(onDone = {
-                        nav.navigate(Routes.HOME) { popUpTo(Routes.SPLASH) { inclusive = true } }
+                        if (!handled) {
+                            handled = true
+                            runCatching {
+                                nav.navigate(Routes.HOME) { popUpTo(Routes.SPLASH) { inclusive = true } }
+                            }
+                        }
                     })
                 }
                 composable(Routes.HOME) {
