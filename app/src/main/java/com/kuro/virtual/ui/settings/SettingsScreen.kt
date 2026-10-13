@@ -36,8 +36,8 @@ import androidx.compose.ui.unit.dp
 import com.kuro.core.ProfileManager
 import com.kuro.core.VirtualCore
 import com.kuro.core.VirtualStorage
-import com.kuro.virtual.BuildConfig
 import com.kuro.virtual.KuroDeviceAdmin
+import dev.kuro.reu.BuildConfig
 import com.kuro.virtual.data.VaultStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
