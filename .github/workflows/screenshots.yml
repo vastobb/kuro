@@ -37,7 +37,7 @@ jobs:
         if: failure()
         run: |
           ls app/build/test-results/testDebugUnitTest/ || true
-          grep -A 30 "ExceptionInInitializerError" app/build/test-results/testDebugUnitTest/*.xml | head -n 60 || true
+          grep -A 12 "<failure" app/build/test-results/testDebugUnitTest/TEST-dev.kuro.app.screens.KuroScreenshotTest.xml | head -n 60 || true
 
       - name: List screenshots
         run: find app/src/test/snapshots -type f | sort
