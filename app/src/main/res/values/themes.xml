@@ -1,0 +1,14 @@
+<resources>
+    <!-- Kuro base theme: AMOLED dark-first. Compose draws all UI; this only styles window. -->
+    <style name="Theme.Kuro" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowIsTranslucent">false</item>
+    </style>
+
+    <style name="Theme.Kuro.Splash" parent="Theme.Kuro">
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
+</resources>
