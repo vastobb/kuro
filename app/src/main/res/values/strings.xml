@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Kuro</string>
+    <string name="vault_empty_title">Vault is empty</string>
+    <string name="vault_empty_body">Add an installed app or import an APK file to run it here in isolation.</string>
+</resources>

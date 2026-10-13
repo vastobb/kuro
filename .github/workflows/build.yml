@@ -1,0 +1,53 @@
+name: Build Kuro APKs
+
+# No local Gradle/NDK needed. Everything builds here on GitHub Actions.
+# Kuro core is pure Kotlin (no JNI), so no NDK setup is required.
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install platform and build tools
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" "build-tools;35.0.0" "platform-tools"
+
+      - name: Set up Gradle 8.7
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.7
+
+      - name: Build debug and release APKs
+        run: gradle :app:assembleDebug :app:assembleRelease --stacktrace --warning-mode all
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: kuro-debug
+          path: app/build/outputs/apk/debug/*.apk
+
+      - name: Upload release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: kuro-release
+          path: app/build/outputs/apk/release/*.apk
