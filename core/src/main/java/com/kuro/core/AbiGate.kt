@@ -6,9 +6,9 @@ import java.util.zip.ZipFile
  * 64-bit gate for APK imports.
  *
  * Reads the APK as a plain zip (no NDK, no PackageParser native code) and
- * collects `lib/<abi>/*.so` entries. Pure Dalvik/ART packages have no native
- * libs and always pass; packages with native libs pass when at least one of
- * their ABIs is in [android.os.Build.SUPPORTED_ABIS].
+ * collects native library entries from the APK lib folders. Pure Dalvik/ART
+ * packages have no native libs and always pass; packages with native libs
+ * pass when at least one of their ABIs is in [android.os.Build.SUPPORTED_ABIS].
  */
 object AbiGate {
 
