@@ -37,7 +37,11 @@ fun KuroEmptyState(
             contentAlignment = Alignment.Center
         ) { glyph() }
         Spacer(Modifier.height(KuroSpacing.s16))
-        Text(headline, style = MaterialTheme.typography.titleLarge)
+        Text(
+            headline,
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onBackground
+        )
         Spacer(Modifier.height(KuroSpacing.s8))
         Text(
             description,

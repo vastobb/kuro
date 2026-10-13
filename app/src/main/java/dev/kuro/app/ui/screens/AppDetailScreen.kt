@@ -64,7 +64,11 @@ fun AppDetailScreen(appId: String, onBack: () -> Unit) {
                 )
             }
             Spacer(Modifier.height(KuroSpacing.s16))
-            Text(app.name, style = MaterialTheme.typography.displayLarge)
+            Text(
+                app.name,
+                style = MaterialTheme.typography.displayLarge,
+                color = MaterialTheme.colorScheme.onBackground
+            )
             Text(
                 app.packageName,
                 style = MaterialTheme.typography.bodyLarge,

@@ -26,7 +26,11 @@ fun SectionHeader(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(title, style = MaterialTheme.typography.titleLarge)
+        Text(
+            title,
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onBackground
+        )
         if (actionLabel != null) {
             TextButton(onClick = { onAction?.invoke() }) {
                 Text(
@@ -55,7 +59,11 @@ fun KuroScreenTitle(
                 color = MaterialTheme.colorScheme.primary
             )
         }
-        Text(title, style = MaterialTheme.typography.displayLarge)
+        Text(
+            title,
+            style = MaterialTheme.typography.displayLarge,
+            color = MaterialTheme.colorScheme.onBackground
+        )
         Text(
             subtitle,
             style = MaterialTheme.typography.bodyLarge,
@@ -94,6 +102,7 @@ fun BrandHeader(
         Text(
             greeting,
             style = MaterialTheme.typography.displayLarge,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(top = KuroSpacing.s12)
         )
         Text(
