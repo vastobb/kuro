@@ -4,6 +4,11 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+// Release signing comes from repository secrets via env (see release.yml).
+// Absent locally -> release stays unsigned, debug builds unaffected.
+val releaseKeystore = System.getenv("KURO_KEYSTORE_FILE")
+    ?.let(::file)?.takeIf { it.exists() }
+
 android {
     namespace = "dev.kuro.app"
     compileSdk = 34
@@ -20,6 +25,17 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            if (releaseKeystore != null) {
+                storeFile = releaseKeystore
+                storePassword = System.getenv("KURO_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("KURO_KEY_ALIAS")
+                keyPassword = System.getenv("KURO_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -27,6 +43,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            if (releaseKeystore != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
         debug {
             applicationIdSuffix = ".debug"

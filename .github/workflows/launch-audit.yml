@@ -1,6 +1,7 @@
 name: Launch audit (emulator logcat)
 
-# Temporary diagnostic: boot emulator, launch Kuro, capture the exact launch crash.
+# Release smoke test: boot emulator, launch the signed release APK,
+# capture any launch crash. Uses the release APK, not debug.
 on:
   workflow_dispatch:
 
@@ -27,25 +28,48 @@ jobs:
           sdkmanager --install "platform-tools" "platforms;android-34" "build-tools;34.0.0"
           yes | sdkmanager --licenses || true
 
+      - name: Check signing secrets
+        run: |
+          MISSING=0
+          for v in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
+            if [ -z "${!v}" ]; then echo "missing repository secret: $v"; MISSING=1; fi
+          done
+          [ "$MISSING" = "0" ] || exit 1
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      - name: Decode keystore
+        run: echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > /tmp/kuro-release.jks
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+
       - name: Make gradlew executable
         run: chmod +x gradlew
 
-      - name: Build debug APK
-        run: ./gradlew :app:assembleDebug --stacktrace
+      - name: Build signed release APK
+        run: ./gradlew :app:assembleRelease --stacktrace
+        env:
+          KURO_KEYSTORE_FILE: /tmp/kuro-release.jks
+          KURO_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KURO_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KURO_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
-      - name: Launch on emulator and capture logcat
+      - name: Launch release on emulator and capture logcat
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
           target: google_apis
           arch: x86_64
           script: |
-            ls -lh app/build/outputs/apk/debug/
-            adb install -r app/build/outputs/apk/debug/app-debug.apk
+            ls -lh app/build/outputs/apk/release/
+            adb install -r app/build/outputs/apk/release/app-release.apk
             adb logcat -c
-            adb shell am start -n dev.kuro.app.debug/dev.kuro.app.MainActivity
+            adb shell am start -n dev.kuro.app/dev.kuro.app.MainActivity
             sleep 20
-            adb shell pidof dev.kuro.app.debug && echo "PROCESS ALIVE" || echo "PROCESS GONE"
+            adb shell pidof dev.kuro.app && echo "PROCESS ALIVE" || echo "PROCESS GONE"
             adb shell dumpsys activity activities | grep -i -A 3 "kuro" | head -n 20 || true
             adb logcat -d -v brief > logcat.txt || true
             echo "=== AndroidRuntime / FATAL ==="

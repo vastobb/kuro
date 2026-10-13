@@ -68,6 +68,24 @@ git push origin main
 Every action opens a premium bottom sheet (drag/swipe/spring). Empty states have
 illustration + headline + description + action. Taps scale 0.97 + haptic.
 
+## Release build (signed)
+
+`release.yml` runs `assembleRelease`, signs with repository secrets, verifies
+with `apksigner` + `aapt2`, and uploads **`kuro-release.apk`**.
+Emulator testing (`launch-audit.yml`) also uses the signed release APK.
+
+Create the secrets once (keystore stays on your machine):
+
+```bash
+keytool -genkeypair -keystore kuro-release.jks -alias kuro \
+  -keyalg RSA -keysize 2048 -validity 10950
+base64 -w0 kuro-release.jks > kuro-release.jks.b64  # macOS: base64 -i kuro-release.jks
+gh secret set ANDROID_KEYSTORE_BASE64 < kuro-release.jks.b64
+gh secret set ANDROID_KEYSTORE_PASSWORD   # prompts, hidden
+gh secret set ANDROID_KEY_ALIAS           # e.g. kuro
+gh secret set ANDROID_KEY_PASSWORD        # prompts, hidden
+```
+
 ## Next (engine, not this milestone)
 
 - Virtualization runtime, work-profile clones, APK installer, activity monitor data
