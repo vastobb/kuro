@@ -1,5 +1,6 @@
 package dev.kuro.app.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -30,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import dev.kuro.app.logging.KuroLog
 import dev.kuro.app.ui.components.KuroCard
 import dev.kuro.app.ui.components.KuroScreenTitle
 import dev.kuro.app.ui.theme.KuroSpacing
@@ -49,10 +51,12 @@ private data class SettingRow(
 @Composable
 fun SettingsScreen(
     darkTheme: Boolean,
-    onToggleTheme: (Boolean) -> Unit
+    onToggleTheme: (Boolean) -> Unit,
+    onOpenDebug: () -> Unit = {}
 ) {
     var perfMode by remember { mutableStateOf(true) }
     var saver by remember { mutableStateOf(true) }
+    var aboutTaps by remember { mutableStateOf(0) }
 
     val groups: List<Pair<String, List<SettingRow>>> = listOf(
         "Appearance" to listOf(
@@ -97,7 +101,20 @@ fun SettingsScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = KuroSpacing.s8)
                     )
-                    KuroCard(Modifier.fillMaxWidth()) {
+                    KuroCard(
+                        Modifier.fillMaxWidth().then(
+                            if (title == "About") {
+                                Modifier.clickable {
+                                    aboutTaps++
+                                    if (aboutTaps >= 5) {
+                                        aboutTaps = 0
+                                        KuroLog.event("DEBUG_OPEN", "via About taps")
+                                        onOpenDebug()
+                                    }
+                                }
+                            } else Modifier
+                        )
+                    ) {
                         rows.forEach { row ->
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -119,11 +136,17 @@ fun SettingsScreen(
                                     )
                                     row.title == "Performance mode" -> Switch(
                                         checked = perfMode,
-                                        onCheckedChange = { perfMode = it }
+                                        onCheckedChange = {
+                                            perfMode = it
+                                            KuroLog.settingsChange("perfMode", it.toString())
+                                        }
                                     )
                                     row.title == "Vault usage" -> Switch(
                                         checked = saver,
-                                        onCheckedChange = { saver = it }
+                                        onCheckedChange = {
+                                            saver = it
+                                            KuroLog.settingsChange("storageSaver", it.toString())
+                                        }
                                     )
                                     else -> Icon(Icons.Filled.ChevronRight, contentDescription = null)
                                 }

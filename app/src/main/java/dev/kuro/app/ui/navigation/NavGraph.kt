@@ -4,6 +4,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -16,15 +17,31 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import dev.kuro.app.logging.KuroLog
 import dev.kuro.app.ui.components.KuroBottomBar
 import dev.kuro.app.ui.screens.ActivityScreen
 import dev.kuro.app.ui.screens.AppDetailScreen
+import dev.kuro.app.ui.screens.DebugLogsScreen
 import dev.kuro.app.ui.screens.HomeScreen
 import dev.kuro.app.ui.screens.ImportFlowScreen
 import dev.kuro.app.ui.screens.ImportScreen
 import dev.kuro.app.ui.screens.SettingsScreen
 import dev.kuro.app.ui.screens.SplashScreen
 import dev.kuro.app.ui.theme.KuroTheme
+
+/** Short display name for navigation tracing. */
+private fun traceName(route: String): String = when {
+    route == Routes.SPLASH -> "Splash"
+    route == Routes.HOME -> "Home"
+    route == Routes.VAULT -> "Vault"
+    route == Routes.IMPORT -> "Import"
+    route.startsWith("import_flow") -> "ImportFlow"
+    route == Routes.ACTIVITY -> "Activity"
+    route == Routes.SETTINGS -> "Settings"
+    route == Routes.DEBUG_LOGS -> "DebugLogs"
+    route.startsWith("app_detail") -> "AppDetail"
+    else -> route
+}
 
 /**
  * Kuro nav — Navigation Compose + bottom bar (Home / Vault / Import* / Activity / Settings).
@@ -37,9 +54,13 @@ fun KuroNavGraph() {
     val route = backStack?.destination?.route
     var darkTheme by remember { mutableStateOf(true) }
 
+    LaunchedEffect(Unit) { KuroLog.navInit() }
+    LaunchedEffect(route) { route?.let { KuroLog.screen(traceName(it)) } }
+
     KuroTheme(darkTheme = darkTheme) {
         val showBar = route != null &&
             route != Routes.SPLASH &&
+            route != Routes.DEBUG_LOGS &&
             !route.startsWith("import_flow") &&
             !route.startsWith("app_detail")
 
@@ -72,6 +93,7 @@ fun KuroNavGraph() {
                     SplashScreen(onDone = {
                         if (!handled) {
                             handled = true
+                            KuroLog.splashEnd()
                             runCatching {
                                 nav.navigate(Routes.HOME) { popUpTo(Routes.SPLASH) { inclusive = true } }
                             }
@@ -111,8 +133,15 @@ fun KuroNavGraph() {
                 composable(Routes.SETTINGS) {
                     SettingsScreen(
                         darkTheme = darkTheme,
-                        onToggleTheme = { darkTheme = it }
+                        onToggleTheme = {
+                            darkTheme = it
+                            KuroLog.settingsChange("theme", if (it) "dark" else "light")
+                        },
+                        onOpenDebug = { nav.navigate(Routes.DEBUG_LOGS) }
                     )
+                }
+                composable(Routes.DEBUG_LOGS) {
+                    DebugLogsScreen(onBack = { nav.popBackStack() })
                 }
                 composable(
                     route = Routes.APP_DETAIL,

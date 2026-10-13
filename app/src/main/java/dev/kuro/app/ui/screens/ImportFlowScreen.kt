@@ -14,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -21,6 +22,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import dev.kuro.app.logging.KuroLog
+import dev.kuro.app.ui.components.ImportSteps
 import dev.kuro.app.ui.components.KuroCard
 import dev.kuro.app.ui.components.KuroFullWidthPrimary
 import dev.kuro.app.ui.components.KuroGhostButton
@@ -42,6 +45,11 @@ fun ImportFlowScreen(
     var envName by remember { mutableStateOf("Default Workspace") }
     var isolate by remember { mutableStateOf(true) }
     var notifications by remember { mutableStateOf(true) }
+
+    LaunchedEffect(initialSource) { KuroLog.importStart(initialSource) }
+    LaunchedEffect(step) {
+        KuroLog.importStep(step, ImportSteps.size, ImportSteps.getOrElse(step) { "Step" })
+    }
 
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState())
@@ -83,11 +91,23 @@ fun ImportFlowScreen(
                         Text("Environment: $envName")
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("Isolate storage", Modifier.weight(1f))
-                            Switch(checked = isolate, onCheckedChange = { isolate = it })
+                            Switch(
+                                checked = isolate,
+                                onCheckedChange = {
+                                    isolate = it
+                                    KuroLog.settingsChange("import.isolateStorage", it.toString())
+                                }
+                            )
                         }
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("Allow notifications", Modifier.weight(1f))
-                            Switch(checked = notifications, onCheckedChange = { notifications = it })
+                            Switch(
+                                checked = notifications,
+                                onCheckedChange = {
+                                    notifications = it
+                                    KuroLog.settingsChange("import.notifications", it.toString())
+                                }
+                            )
                         }
                     }
                     3 -> KuroCard(Modifier.fillMaxWidth()) {

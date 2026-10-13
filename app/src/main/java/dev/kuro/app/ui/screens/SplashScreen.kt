@@ -27,6 +27,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import dev.kuro.app.logging.KuroLog
 import dev.kuro.app.ui.theme.KuroMotion
 import dev.kuro.app.ui.theme.KuroSecondary
 import dev.kuro.app.ui.theme.KuroSpacing
@@ -39,6 +40,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun SplashScreen(onDone: () -> Unit) {
     LaunchedEffect(Unit) {
+        KuroLog.splashStart()
         delay(1150)
         onDone()
     }

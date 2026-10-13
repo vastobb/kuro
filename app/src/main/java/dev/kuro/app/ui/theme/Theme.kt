@@ -9,6 +9,7 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import dev.kuro.app.logging.KuroLog
 
 private val KuroDarkScheme = darkColorScheme(
     primary = KuroPrimary,
@@ -75,6 +76,7 @@ fun KuroTheme(
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
+    KuroLog.themeInit(darkTheme, dynamicColor)
     val scheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             runCatching {

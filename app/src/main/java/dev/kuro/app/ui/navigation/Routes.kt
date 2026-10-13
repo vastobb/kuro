@@ -9,6 +9,7 @@ object Routes {
     const val IMPORT_FLOW = "import_flow?source={source}"
     const val ACTIVITY = "activity"
     const val SETTINGS = "settings"
+    const val DEBUG_LOGS = "debug_logs"
     const val APP_DETAIL = "app_detail/{appId}"
 
     fun importFlow(source: String) = "import_flow?source=$source"
