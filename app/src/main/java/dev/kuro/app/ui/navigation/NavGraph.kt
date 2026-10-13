@@ -1,8 +1,11 @@
 package dev.kuro.app.ui.navigation
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -75,11 +78,16 @@ fun KuroNavGraph() {
                 }
             }
         ) { padding ->
-            NavHost(
-                navController = nav,
-                startDestination = Routes.HOME,
-                modifier = Modifier.padding(padding)
+            // Surface sets LocalContentColor for the whole graph: without it,
+            // default-colored text falls back to black (invisible on AMOLED).
+            Surface(
+                modifier = Modifier.padding(padding).fillMaxSize(),
+                color = MaterialTheme.colorScheme.background
             ) {
+                NavHost(
+                    navController = nav,
+                    startDestination = Routes.HOME
+                ) {
                 composable(Routes.HOME) {
                     HomeScreen(
                         onOpenApp = { nav.navigate(Routes.appDetail(it)) },
@@ -131,6 +139,7 @@ fun KuroNavGraph() {
                         appId = entry.arguments?.getString("appId") ?: "",
                         onBack = { nav.popBackStack() }
                     )
+                }
                 }
             }
         }
