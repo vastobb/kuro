@@ -125,7 +125,7 @@ fun HomeScreen(
         item {
             SectionHeader("Recent Apps", "See all", onAction = { onSeeAll() })
         }
-        items(apps.take(3), key = { it.id }) { app ->
+        items(apps.take(3), key = { "recent-${it.id}" }) { app ->
             AppCard(
                 app = app,
                 onLaunch = {},
@@ -135,7 +135,7 @@ fun HomeScreen(
             )
         }
         item { SectionHeader("Pinned") }
-        items(apps.filter { it.pinned }, key = { it.id }) { app ->
+        items(apps.filter { it.pinned }, key = { "pinned-${it.id}" }) { app ->
             AppCard(
                 app = app,
                 onLaunch = {},
