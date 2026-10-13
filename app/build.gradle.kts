@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.kuro.virtual"
+    namespace = "dev.kuro.reu"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.kuro.virtual"
+        applicationId = "dev.kuro.reu"
         minSdk = 29
         targetSdk = 35
         versionCode = 1

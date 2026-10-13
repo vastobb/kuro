@@ -33,7 +33,7 @@
             android:excludeFromRecents="true"
             android:theme="@android:style/Theme.Translucent.NoTitleBar">
             <intent-filter>
-                <action android:name="com.kuro.virtual.PROFILE_INSTALL" />
+                <action android:name="dev.kuro.reu.PROFILE_INSTALL" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data
                     android:scheme="content"

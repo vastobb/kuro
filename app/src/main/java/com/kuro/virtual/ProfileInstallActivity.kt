@@ -49,10 +49,15 @@ class ProfileInstallActivity : ComponentActivity() {
             .orEmpty()
         val pkg = intent.getStringExtra(VaultInstaller.EXTRA_PACKAGE).orEmpty()
         val label = intent.getStringExtra(VaultInstaller.EXTRA_LABEL).ifNullOrEmpty(pkg)
+        val mode = intent.getStringExtra(VaultInstaller.EXTRA_MODE) ?: VaultInstaller.MODE_INSTALL
         setContent {
             KuroTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    InstallPanel(base, splits, pkg, label, onClose = { finish() })
+                    if (mode == VaultInstaller.MODE_UNINSTALL) {
+                        UninstallPanel(pkg, label, onClose = { finish() })
+                    } else {
+                        InstallPanel(base, splits, pkg, label, onClose = { finish() })
+                    }
                 }
             }
         }
@@ -60,6 +65,77 @@ class ProfileInstallActivity : ComponentActivity() {
 
     private fun String?.ifNullOrEmpty(fallback: String): String =
         if (this.isNullOrEmpty()) fallback else this
+}
+
+@Composable
+private fun UninstallPanel(pkg: String, label: String, onClose: () -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var message by remember { mutableStateOf("Remove the work-profile clone of $label? The device copy stays.") }
+    var busy by remember { mutableStateOf(false) }
+    var finished by remember { mutableStateOf(false) }
+
+    fun uninstall() {
+        if (pkg.isEmpty()) {
+            message = "Package missing."
+            return
+        }
+        busy = true
+        message = "Removing $label…"
+        scope.launch(Dispatchers.IO) {
+            val future = com.kuro.core.InstallEvents.expect(pkg)
+            try {
+                val installer = context.packageManager.packageInstaller
+                val result = android.content.Intent(VaultInstaller.ACTION_INSTALL_RESULT).apply {
+                    setClassName(context.packageName, "com.kuro.virtual.InstallResultReceiver")
+                    putExtra(VaultInstaller.EXTRA_PACKAGE, pkg)
+                }
+                var flags = android.app.PendingIntent.FLAG_UPDATE_CURRENT
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                    flags = flags or android.app.PendingIntent.FLAG_MUTABLE
+                }
+                val sender = android.app.PendingIntent.getBroadcast(
+                    context, pkg.hashCode(), result, flags,
+                )
+                installer.uninstall(pkg, sender.intentSender)
+                val status = future.get()
+                withContext(Dispatchers.Main) {
+                    busy = false
+                    finished = status == android.content.pm.PackageInstaller.STATUS_SUCCESS
+                    message = if (finished) {
+                        "Clone removed. Its work data is gone; the device copy stays."
+                    } else {
+                        "Uninstall failed (status $status)."
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    busy = false
+                    message = "Uninstall failed: ${e.message}"
+                }
+            }
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Text("Kuro work uninstall", style = MaterialTheme.typography.headlineSmall)
+        Spacer(Modifier.height(12.dp))
+        Text(message, style = MaterialTheme.typography.bodyMedium)
+        Spacer(Modifier.height(16.dp))
+        if (busy) {
+            LinearProgressIndicator()
+        } else if (!finished) {
+            Button(onClick = { uninstall() }) { Text("Uninstall clone") }
+        }
+        Spacer(Modifier.height(8.dp))
+        Button(onClick = onClose) { Text("Close") }
+    }
 }
 
 @Composable

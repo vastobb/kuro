@@ -159,6 +159,30 @@ class VaultRepository(context: Context) {
     }
 
     /**
+     * Removes a work-profile clone through the profile-side installer.
+     * The device copy is never touched.
+     */
+    suspend fun uninstallClone(entry: VaultEntry): Result<String> = withContext(Dispatchers.IO) {
+        runCatching {
+            ProfileManager.workProfile(appContext)
+                ?: throw IllegalStateException("No work profile.")
+            val intent = Intent(VaultInstaller.ACTION_PROFILE_INSTALL).apply {
+                component = ComponentName(appContext, ProfileInstallActivity::class.java)
+                putExtra(VaultInstaller.EXTRA_MODE, VaultInstaller.MODE_UNINSTALL)
+                putExtra(VaultInstaller.EXTRA_PACKAGE, entry.packageName)
+                putExtra(VaultInstaller.EXTRA_LABEL, entry.label)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            try {
+                appContext.startActivity(intent)
+            } catch (_: Exception) {
+                throw IllegalStateException("Work-profile handoff blocked on this device")
+            }
+            "Opening uninstall in the work profile."
+        }
+    }
+
+    /**
      * Launches a vault entry. Clones open their work-profile instance;
      * plain entries open the device copy.
      */

@@ -1,31 +1,33 @@
 # Kuro (黒)
 
-Kuro is an isolated app vault for modern Android. It keeps a private set of apps
-you choose — added from apps already installed on the device, or imported
-directly from an APK file — and launches each one in its own isolated task
-stack with per-app vault storage. 64-bit first: APKs are ABI-checked on import
-so only packages your device can actually run enter the vault.
+Kuro (`dev.kuro.reu`) is an isolated app vault for modern Android. Vault
+entries open from Kuro's own console — bottom navigation, sections for
+clones vs device copies, and an action sheet per app that always says which
+instance will open before anything launches. Nothing opens an original app
+by surprise: entries without a clone offer to make one first.
 
 Public repo: https://github.com/vastobb/kuro
 
 ## Features
 
-- Add apps from installed apps (launcher query, search, one-tap add).
+- Add apps from installed apps (Clone lab, search, one-tap add).
 - Import APK files (system file picker, copy into vault, manifest parse).
 - 64-bit ABI gate: native `lib/` entries are checked against
   `Build.SUPPORTED_ABIS`; incompatible APKs are rejected with a reason.
-- Isolated launch: every vault app starts with `FLAG_ACTIVITY_NEW_TASK` plus
-  `FLAG_ACTIVITY_MULTIPLE_TASK` and Kuro extras, so windows stay grouped per
-  app and away from the main task stack.
-- Per-app vault data dir with one-tap clear; crash in a launched app cannot
-  take down Kuro (separate processes, result-checked launches).
+- Clone-first vault: every entry shows Clone or Device. Tapping opens an
+  action sheet — Open clone, Make clone, Install from vault, Open device
+  copy (explicit), Clear vault data, Remove, Uninstall clone.
 - Real clones via managed work profile: separate OS-level instances with
-  separate data, launched cross-profile from Kuro. Plain entries open the
-  device copy; long-press an entry and choose Clone once the profile is set
-  up in Settings.
-- Clean original design: white + black + vermilion red, Material 3, dark mode
-  follows the system, springy grid, animated navigation, monogram avatars.
-  Deliberately not a BlackBox look-alike and no AI-gradient styling.
+  separate data, launched cross-profile from Kuro. Kuro's staged clone APKs
+  live in its own vault directory.
+- Install from vault: APK entries whose package is missing get a one-tap
+  user-confirmed system install, then launch from Kuro.
+- Crash-safe: a crash in a launched app cannot take down Kuro (separate
+  processes, result-checked launches).
+- Clean original console UI: bottom navigation (Vault / Clone lab /
+  Settings), sectioned vault, per-app action sheets, white + black +
+  vermilion red, Material 3, dark mode follows the system. Written from
+  scratch — not a BlackBox-style layout, no AI-gradient styling.
 
 ## Design
 
@@ -58,22 +60,29 @@ interfaces are ready but not claimed as done.
 
 ## Clones vs device copies
 
-Tapping a plain vault entry opens the device copy of that app (same instance,
-same data) — Android gives a normal app no other way to run an installed
-package. For a true separate instance, Kuro clones into a managed work
-profile (same approach as Island/Shelter, public APIs only, no root):
+Tapping a vault entry never launches anything directly — it opens that app's
+action sheet, which states the instance type up front. Clones are separate
+OS-level instances with separate data (same approach as Island/Shelter,
+public APIs only, no root):
 
 1. Open Settings → Work profile clones → Set up. The system creates the
    profile with Kuro as its manager (one-time, user-confirmed).
-2. Long-press a vault entry → Clone to work profile. Kuro stages its APKs
-   and hands them to the profile-side installer; confirm once in the work
-   context.
-3. The entry shows a Clone badge and opens the separate instance from then on.
+2. Open the app's sheet in the Vault → Make clone. Kuro stages its APKs in
+   its own vault directory and hands them to the profile-side installer;
+   confirm once in the work context.
+3. The entry shows a Clone badge and its primary button becomes Open clone.
 
-APK entries whose package is not installed get an Install action instead:
+APK entries whose package is not installed get Install from vault instead:
 Kuro installs the vault APK through a user-confirmed system session, then
-launches it. Some OEMs restrict work-profile provisioning; Settings reports
+launches it. Clones can be removed from their sheet without touching the
+device copy. Some OEMs restrict work-profile provisioning; Settings reports
 when setup is unavailable.
+
+Why not run APKs straight from Kuro's directory with no install at all?
+That is in-process virtualization (a native hook engine over hidden
+per-version Android APIs). It cannot be written from scratch without that
+engine's code, and manifest-only repackaging without `classes.dex`
+rewriting installs broken apps — so Kuro does not pretend to do either.
 
 ## Requirements
 

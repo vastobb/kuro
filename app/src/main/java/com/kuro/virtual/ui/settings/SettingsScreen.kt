@@ -1,6 +1,5 @@
 package com.kuro.virtual.ui.settings
 
-import android.content.ComponentName
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -9,12 +8,19 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -71,79 +77,86 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
         ActivityResultContracts.StartActivityForResult(),
     ) {
         refreshProfile()
-        profileNote = "Returned from setup. If the profile is active, clone apps from their menus."
+        profileNote = "Returned from setup. Clones are made from each vault entry."
     }
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+            .verticalScroll(rememberScrollState()),
     ) {
-        Text("Settings", style = MaterialTheme.typography.headlineSmall)
-        Spacer(Modifier.height(8.dp))
-        SettingRow("App", "Kuro ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
-        SettingRow("Android", "API ${Build.VERSION.SDK_INT} (${Build.VERSION.RELEASE})")
-        SettingRow(
-            "Device",
-            if (VirtualCore.is64BitDevice) "64-bit" else "32-bit",
+        Text(
+            "Settings",
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.padding(start = 20.dp, top = 16.dp, end = 20.dp),
         )
-        SettingRow("ABIs", VirtualCore.deviceAbis().joinToString(", "))
-        SettingRow("Vault size", formatBytes(vaultBytes))
-        SettingRow("Theme", "Follows system (white / black + vermilion)")
+        Spacer(Modifier.height(10.dp))
 
-        Spacer(Modifier.height(12.dp))
-        Text("Work profile clones", style = MaterialTheme.typography.titleSmall)
-        SettingRow("Status", profileState)
-        profileNote?.let {
-            Text(it, style = MaterialTheme.typography.bodySmall)
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(
-                onClick = {
-                    val intent = ProfileManager.provisioningIntent(context, KuroDeviceAdmin.component(context))
-                    if (intent == null) {
-                        profileNote = "Work-profile setup is not available on this device."
-                    } else {
-                        try {
-                            provisionLauncher.launch(intent)
-                        } catch (_: Exception) {
-                            profileNote = "Could not start setup on this device."
+        SettingsCard(title = "Work profile clones") {
+            SettingRow("Status", profileState)
+            profileNote?.let {
+                Text(it, style = MaterialTheme.typography.bodySmall)
+                Spacer(Modifier.height(6.dp))
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick = {
+                        val intent = ProfileManager.provisioningIntent(context, KuroDeviceAdmin.component(context))
+                        if (intent == null) {
+                            profileNote = "Work-profile setup is not available on this device."
+                        } else {
+                            try {
+                                provisionLauncher.launch(intent)
+                            } catch (_: Exception) {
+                                profileNote = "Could not start setup on this device."
+                            }
                         }
-                    }
-                },
-                enabled = profileState == "Not set up",
-            ) { Text("Set up") }
-            TextButton(
-                onClick = { confirmRemoveProfile = true },
-                enabled = profileState.startsWith("Active"),
-            ) { Text("Remove") }
+                    },
+                    enabled = profileState == "Not set up",
+                ) { Text("Set up") }
+                OutlinedButton(
+                    onClick = { confirmRemoveProfile = true },
+                    enabled = profileState.startsWith("Active"),
+                ) { Text("Remove") }
+            }
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "Each clone is a separate instance with its own data. Tapping a plain vault " +
+                    "entry still opens the device copy — make its clone first.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
-        Text(
-            "Clones are separate OS-level instances with separate data. Tapping a plain entry " +
-                "still opens the device copy; long-press it and choose Clone once the profile is active.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
 
-        Spacer(Modifier.height(12.dp))
-        Button(
-            onClick = { confirmClear = true },
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-        ) { Text("Clear vault") }
-        Spacer(Modifier.height(8.dp))
-        Text(
-            "Install-free engine execution stays on the roadmap; nothing here claims it yet.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        SettingsCard(title = "This device") {
+            SettingRow("App", "Kuro ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE}) · dev.kuro.reu")
+            SettingRow("Android", "API ${Build.VERSION.SDK_INT} (${Build.VERSION.RELEASE})")
+            SettingRow("CPU", if (VirtualCore.is64BitDevice) "64-bit" else "32-bit")
+            SettingRow("ABIs", VirtualCore.deviceAbis().joinToString(", "))
+            SettingRow("Vault storage", formatBytes(vaultBytes))
+            SettingRow("Theme", "Follows system")
+        }
+
+        SettingsCard(title = "Danger zone") {
+            Button(
+                onClick = { confirmClear = true },
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+            ) { Text("Clear vault") }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Removes every vault entry, staged APK and per-app vault data.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Spacer(Modifier.height(24.dp))
     }
 
     if (confirmClear) {
         AlertDialog(
             onDismissRequest = { confirmClear = false },
             title = { Text("Clear vault?") },
-            text = { Text("Removes every vault entry, imported APK and per-app data.") },
+            text = { Text("Removes every vault entry, staged APK and per-app vault data.") },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -168,7 +181,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
         AlertDialog(
             onDismissRequest = { confirmRemoveProfile = false },
             title = { Text("Remove work profile?") },
-            text = { Text("Kuro stops managing the profile. Clones inside it are removed with it.") },
+            text = { Text("Kuro stops managing the profile. Clones inside it go away with it.") },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -194,6 +207,23 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
 }
 
 @Composable
+private fun SettingsCard(title: String, content: @Composable () -> Unit) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        shape = RoundedCornerShape(22.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp),
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            Text(title, style = MaterialTheme.typography.titleSmall)
+            Spacer(Modifier.height(8.dp))
+            content()
+        }
+    }
+}
+
+@Composable
 private fun SettingRow(title: String, value: String) {
     Text(title, style = MaterialTheme.typography.labelLarge)
     Text(
@@ -201,7 +231,7 @@ private fun SettingRow(title: String, value: String) {
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
-    Spacer(Modifier.height(4.dp))
+    Spacer(Modifier.height(6.dp))
 }
 
 private fun formatBytes(bytes: Long): String {

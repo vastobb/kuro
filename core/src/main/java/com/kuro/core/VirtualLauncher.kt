@@ -14,8 +14,8 @@ import android.content.Intent
  */
 object VirtualLauncher {
 
-    const val EXTRA_ISOLATED = "com.kuro.virtual.ISOLATED"
-    const val EXTRA_VAULT_PACKAGE = "com.kuro.virtual.VAULT_PACKAGE"
+    const val EXTRA_ISOLATED = "dev.kuro.reu.ISOLATED"
+    const val EXTRA_VAULT_PACKAGE = "dev.kuro.reu.VAULT_PACKAGE"
 
     data class LaunchResult(val ok: Boolean, val reason: String? = null)
 

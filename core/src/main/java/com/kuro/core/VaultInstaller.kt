@@ -41,11 +41,14 @@ object InstallEvents {
  */
 object VaultInstaller {
 
-    const val ACTION_INSTALL_RESULT = "com.kuro.virtual.INSTALL_RESULT"
-    const val ACTION_PROFILE_INSTALL = "com.kuro.virtual.PROFILE_INSTALL"
-    const val EXTRA_PACKAGE = "com.kuro.virtual.EXTRA_PACKAGE"
-    const val EXTRA_LABEL = "com.kuro.virtual.EXTRA_LABEL"
-    const val EXTRA_SPLITS = "com.kuro.virtual.EXTRA_SPLITS"
+    const val ACTION_INSTALL_RESULT = "dev.kuro.reu.INSTALL_RESULT"
+    const val ACTION_PROFILE_INSTALL = "dev.kuro.reu.PROFILE_INSTALL"
+    const val EXTRA_PACKAGE = "dev.kuro.reu.EXTRA_PACKAGE"
+    const val EXTRA_LABEL = "dev.kuro.reu.EXTRA_LABEL"
+    const val EXTRA_SPLITS = "dev.kuro.reu.EXTRA_SPLITS"
+    const val EXTRA_MODE = "dev.kuro.reu.EXTRA_MODE"
+    const val MODE_INSTALL = "install"
+    const val MODE_UNINSTALL = "uninstall"
     const val APK_MIME = "application/vnd.android.package-archive"
 
     /** Receiver component inside the host app (explicit intent, no reflection). */
